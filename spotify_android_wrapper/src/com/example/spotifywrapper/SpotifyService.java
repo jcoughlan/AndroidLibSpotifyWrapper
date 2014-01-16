@@ -143,11 +143,11 @@ public class SpotifyService extends Service {
 	private void showNotification() {
 		// TODO Deprecated... replace
 		Notification notification = new Notification(
-				R.drawable.player_next_album, "SMP", System.currentTimeMillis());
+				R.drawable.player_next_album, "ASW", System.currentTimeMillis());
 		Intent notificationIntent = new Intent(this, PlayerActivity.class);
 		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
 				notificationIntent, 0);
-		notification.setLatestEventInfo(this, "SMP", "ShareMyPlaylists.net",
+		notification.setLatestEventInfo(this, "Android Spotify Wrapper", "coughlan.james@outlook.com",
 				pendingIntent);
 		
 		startForeground(NOTIFICATION, notification);
