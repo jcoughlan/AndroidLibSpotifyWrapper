@@ -1,0 +1,9 @@
+.DS_Store
+gen
+obj
+jni/libspotify.so
+jni/api.h
+jni/key.h
+libs/android-async-http-1.4.2.jar
+libs/armeabi
+res/raw/star.wav
