@@ -27,6 +27,7 @@
 								</outputEntries>
 							</builder>
 							<tool id="com.android.gcc.compiler.612027241" name="Android GCC Compiler" superClass="com.android.gcc.compiler">
+								<option id="com.android.gcc.option.includePath.336588874" superClass="com.android.gcc.option.includePath"/>
 								<inputType id="com.android.gcc.inputType.71213610" superClass="com.android.gcc.inputType"/>
 							</tool>
 						</toolChain>
@@ -52,4 +53,5 @@
 	<storageModule moduleId="refreshScope" versionNumber="1">
 		<resource resourceType="PROJECT" workspacePath="/PsyOnSpotify"/>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

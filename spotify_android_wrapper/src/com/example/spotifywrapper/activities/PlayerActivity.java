@@ -60,12 +60,12 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
+import com.example.classes.Track;
 import com.example.spotifywrapper.Installation;
 import com.example.spotifywrapper.R;
 import com.example.spotifywrapper.RemoteControlReceiver;
 import com.example.spotifywrapper.ServiceBinder;
 import com.example.spotifywrapper.SpotifyService.PlayerUpdateDelegate;
-import com.example.spotifywrapper.Track;
 import com.example.spotifywrapper.WebService;
 
 public class PlayerActivity extends Activity {

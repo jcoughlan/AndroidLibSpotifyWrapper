@@ -18,10 +18,11 @@ DONE SO FAR:
 *Track Playback (psyonspotify)
 *Track Starring (psyonspotify)
 *Login (psyonspotify)
+*Basic playlist population
 
 DOING NOW:
 
-*Playlist population, deletion, creation.
+*Tracklist population
 
 TO BE DONE:
 
@@ -35,4 +36,4 @@ CONTACT
 
 Please email me at coughlan.james@outlook.com if you have any questions.
 
-Readme last updated: 16/01/2014
+Readme last updated: 17/01/2014

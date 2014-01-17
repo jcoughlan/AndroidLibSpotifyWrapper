@@ -35,14 +35,14 @@ import android.os.Handler;
 
 import com.example.spotifywrapper.SpotifyService.LoginDelegate;
 import com.example.spotifywrapper.SpotifyService.PlayerUpdateDelegate;
-import com.example.spotifywrapper.SpotifyService.PlaylistContainerDelegate;
+import com.example.spotifywrapper.SpotifyService.PlaylistNamesDelegate;
 
 public class LibSpotifyWrapper {
 
 	private static Handler handler = new Handler();
 	private static LoginDelegate mLoginDelegate;
 	private static PlayerUpdateDelegate mPlayerPositionDelegate;
-	private static PlaylistContainerDelegate mPlaylistContainerDelegate;
+	private static PlaylistNamesDelegate mPlaylistNamesDelegate;
 
 	native public static void init(ClassLoader loader, String storagePath);
 
@@ -60,7 +60,7 @@ public class LibSpotifyWrapper {
 
 	native public static void unstar();
 
-	native private static void fetchallplaylistcontainers();
+	native private static void fetchallplaylistnames();
 
 	public static void loginUser(String username, String password,
 			LoginDelegate loginDelegate) {
@@ -68,9 +68,9 @@ public class LibSpotifyWrapper {
 		login(username, password);
 	}
 
-	public static void fetchAllPlaylists(PlaylistContainerDelegate playlistDelegate) {
-		mPlaylistContainerDelegate = playlistDelegate;
-		fetchallplaylistcontainers();
+	public static void fetchAllPlaylistNames(PlaylistNamesDelegate playlistDelegate) {
+		mPlaylistNamesDelegate= playlistDelegate;
+		fetchallplaylistnames();
 	}
 
 	public static void togglePlay(String uri,
@@ -85,13 +85,21 @@ public class LibSpotifyWrapper {
 		playnext(uri);
 	}
 
-	public static void onAllPlaylistContainersFetched() {
+	public static void onPlaylistNameReceived(final String name) {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
+				mPlaylistNamesDelegate.onPlaylistNameFetched(name);
+			}
+		});
 
-				mPlaylistContainerDelegate.onPlaylistContainerFetchSuccess();
-
+	}
+	//eventually we will have to put in more than just the track name but htis is fine for now
+	public static void onTrackReceived(final String name) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				mPlaylistNamesDelegate.onTrackFetched(name, name );
 			}
 		});
 

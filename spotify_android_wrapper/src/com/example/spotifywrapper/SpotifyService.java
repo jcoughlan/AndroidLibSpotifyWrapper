@@ -55,10 +55,10 @@ public class SpotifyService extends Service {
 	private final IBinder mBinder = new LocalBinder();
 	private WifiLock mWifiLock;
 
-	public static interface PlaylistContainerDelegate {
-		void onPlaylistContainerFetchSuccess();
+	public static interface PlaylistNamesDelegate {
+		void onPlaylistNameFetched(String name);
+		void onTrackFetched(String name, String playlistName);
 
-		void onPlaylistContainerFetchFailed();
 	}
 
 	public static interface LoginDelegate {
@@ -104,11 +104,11 @@ public class SpotifyService extends Service {
 				Environment.getExternalStorageDirectory().getAbsolutePath()
 						+ "/Android/data/com.example.spotifywrapper");
 		Log.i("initialising", "initiliased");
-		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+		//mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
 		// Display a notification about us starting. We put an icon in the
 		// status bar.
-		showNotification();
+		//showNotification();
 
 		mWifiLock = ((WifiManager) getSystemService(Context.WIFI_SERVICE))
 				.createWifiLock(WifiManager.WIFI_MODE_FULL, "mylock");
@@ -158,8 +158,8 @@ public class SpotifyService extends Service {
 
 	}
 
-	public void fetchAllPlaylistContainers(PlaylistContainerDelegate playlistDelegate) {
-		LibSpotifyWrapper.fetchAllPlaylists(playlistDelegate);
+	public void fetchAllPlaylistNames(PlaylistNamesDelegate playlistDelegate) {
+		LibSpotifyWrapper.fetchAllPlaylistNames(playlistDelegate);
 
 	}
 

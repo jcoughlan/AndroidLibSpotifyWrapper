@@ -47,64 +47,104 @@ static void on_play();
 static void on_starred();
 static void on_unstarred();
 static void set_star(bool is_starred, sp_session *session, sp_track *track);
+static void pl_tracks_added(sp_playlist *pl, sp_track * const * tracks,
+		int num_tracks, int position, void *userdata);
+static void container_loaded(sp_playlistcontainer *pc, void *userdata);
 
-//playlist callback0
+//playlist track callback
+static sp_playlist_callbacks pl_callbacks = { pl_tracks_added, };
 static void pl_tracks_added(sp_playlist *pl, sp_track * const * tracks,
 		int num_tracks, int position, void *userdata) {
-	addTask(on_pltracks_added, "token_lost:pause");
-	// log("\t%d tracks added\n", num_tracks);
+	list<int> int_params;
+	int_params.push_back(num_tracks);
+	list < string > string_params;
+	log("JLOG: pltracks %s", sp_playlist_name(pl));
+
+	/*log("SENDING");
+
+	 string a = "a";
+	 string b = "b";
+	 JNIEnv *env;
+	 jclass classLibSpotify = find_class_from_native_thread(&env);
+
+	 log("MEHTOD Id");
+	 jmethodID methodId = env->GetStaticMethodID(classLibSpotify,
+	 "onTrackReceived", "Ljava/lang/String;)V");
+	 log("after");
+	 //	env->CallStaticVoidMethod(classLibSpotify, methodId,L, b);
+	 log("deleting");
+	 env->DeleteLocalRef(classLibSpotify);
+	 log("SENT");*/
+
+	addTask(on_pltracks_added, "on_pltracks", int_params);
 }
-static sp_playlist_callbacks pl_callbacks = { pl_tracks_added,};
+
 void on_pltracks_added(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track) {
-	log("\t tracks added\n");
+	log("\t JLOG:%d tracks added \n", int_params.front());
 }
 
-//end playlist callback
-//container callback
-static void container_loaded(sp_playlistcontainer *pc, void *userdata) {
+static void playlist_metadata_updated(sp_playlist *pl, void *userdata) {
+	list < string > string_params;
 
-	addTask(on_container_loaded, "token_lost:pause");
+	if (sp_playlist_is_loaded(pl))
+		string_params.push_back(sp_playlist_name(pl));
+	else
+		string_params.push_back("playlist not loaded");
+	sp_playlist_remove_callbacks(pl, &pl_callbacks, NULL);
+	addTask(on_playlist_added, "on_playlist", string_params);
+
 }
-static sp_playlistcontainer_callbacks pc_callbacks = { NULL, NULL, NULL,
-		&container_loaded };
-void on_container_loaded(list<int> int_params, list<string> string_params,
+static void playlist_added(sp_playlistcontainer *pc, sp_playlist *pl,
+		int position, void *userdata) {
+	//pl_callbacks.tracks_added = NULL;
+	pl_callbacks.playlist_metadata_updated = &playlist_metadata_updated;
+	sp_playlist_add_callbacks(pl, &pl_callbacks, NULL);
+
+}
+
+void on_playlist_added(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track) {
 
-	log("JLOG: (callback)with %d playlists",
-			sp_playlistcontainer_num_playlists(playlistContainer));
+	string s = string_params.front();
+
+	bool success = true;
+	sp_error error = (sp_error) 0;
+	JNIEnv *env;
+	jclass class_libspotify = find_class_from_native_thread(&env);
+
+	jmethodID methodId = env->GetStaticMethodID(class_libspotify,
+			"onPlaylistNameReceived", "(Ljava/lang/String;)V");
+	env->CallStaticVoidMethod(class_libspotify, methodId,
+			env->NewStringUTF(s.c_str()));
+	env->DeleteLocalRef(class_libspotify);
+
+}
+
+static void container_loaded(sp_playlistcontainer *pc, void *userdata) {
+	addTask(on_container_loaded, "token_lost:pause");
+}
+static sp_playlistcontainer_callbacks pc_callbacks = { &playlist_added, NULL,
+		NULL, &container_loaded };
+
+void on_container_loaded(list<int> int_params, list<string> string_params,
+		sp_session *session, sp_track *track) {
+	sp_playlistcontainer_remove_callbacks(playlistContainer, &pc_callbacks,
+			NULL);
 
 	for (int i = 0; i < sp_playlistcontainer_num_playlists(playlistContainer);
 			++i) {
 		sp_playlist *pl = sp_playlistcontainer_playlist(playlistContainer, i);
-
-		log("playlist name %s at index %d ", sp_playlist_name(pl), i);
-		sp_playlist_add_callbacks(pl, &pl_callbacks, NULL);
-
-		/*if (!strcasecmp(sp_playlist_name(pl), g_listname)) {
-		 //g_jukeboxlist = pl;
-		 //try_jukebox_start();
-		 log("JLOG: Looking at playlists\n");
-		 }*/
 	}
-	/*sp_playlistcontainer_num_playlists(pc));
-	 sp_playlistcontainer_remove_callbacks(pc, &pc_callbacks, NULL);
-	 log( "jukebox: Rootlist synchronized (%d playlists)\n",
-	 sp_playlistcontainer_num_playlists(pc));*/
 
 }
-
-//end container callback
-
 
 void fetchallplaylistcontainers(list<int> int_params,
 		list<string> string_params, sp_session *session, sp_track *track) {
 	sp_playlistcontainer *pc = sp_session_playlistcontainer(session);
 	;
 	playlistContainer = pc;
-	//pc_callbacks[0] = .container_loaded = &container_loaded;
 	sp_playlistcontainer_add_callbacks(pc, &pc_callbacks, NULL);
-
 }
 
 void login(list<int> int_params, list<string> string_params,
@@ -250,10 +290,7 @@ void on_end_of_track(list<int> int_params, list<string> string_params,
 void on_allplaylistcontainers_fetched(list<int> int_params,
 		list<string> string_params, sp_session *session, sp_track *track) {
 	call_static_void_method("onAllPlaylistContainersFetched");
-
 }
-
-
 
 void on_logged_in(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track) {
