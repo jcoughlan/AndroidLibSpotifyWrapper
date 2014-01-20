@@ -219,6 +219,7 @@ void* start_spotify(void *storage_path) {
 	config.callbacks = &callbacks;
 	config.tracefile = NULL;
 
+
 	sp_error error = sp_session_create(&config, &session);
 	log("Libspotify was initiated");
 

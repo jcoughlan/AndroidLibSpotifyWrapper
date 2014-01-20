@@ -19,10 +19,12 @@ DONE SO FAR:
 *Track Starring (psyonspotify)
 *Login (psyonspotify)
 *Basic playlist population
+*Tracklist Population
+*Play from playlist/tracklist
 
 DOING NOW:
 
-*Tracklist population
+Image loading, album info, re-initialisation of player, memory optimisation
 
 TO BE DONE:
 
@@ -36,4 +38,4 @@ CONTACT
 
 Please email me at coughlan.james@outlook.com if you have any questions.
 
-Readme last updated: 17/01/2014
+Readme last updated: 20/01/2014

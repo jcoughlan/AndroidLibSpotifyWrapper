@@ -42,5 +42,5 @@ JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_star(JN
 JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_unstar(JNIEnv *je, jclass jc);
 
 //
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchallplaylistnames(JNIEnv *je, jclass jc);
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchallplaylistsandtracks(JNIEnv *je, jclass jc);
 }

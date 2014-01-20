@@ -41,7 +41,8 @@ static sp_playlistcontainer *playlistContainer = NULL;
 static bool s_is_waiting_for_metadata = false;
 static bool s_play_after_loaded = false;
 const char *g_listname;
-
+static int metaUpdate = 0;
+static int localRef = 0;
 static void on_pause();
 static void on_play();
 static void on_starred();
@@ -52,73 +53,112 @@ static void pl_tracks_added(sp_playlist *pl, sp_track * const * tracks,
 static void container_loaded(sp_playlistcontainer *pc, void *userdata);
 
 //playlist track callback
-static sp_playlist_callbacks pl_callbacks = { pl_tracks_added, };
+static sp_playlist_callbacks pl_callbacks = { };
+
 static void pl_tracks_added(sp_playlist *pl, sp_track * const * tracks,
 		int num_tracks, int position, void *userdata) {
 	list<int> int_params;
 	int_params.push_back(num_tracks);
-	list < string > string_params;
-	log("JLOG: pltracks %s", sp_playlist_name(pl));
-
-	/*log("SENDING");
-
-	 string a = "a";
-	 string b = "b";
-	 JNIEnv *env;
-	 jclass classLibSpotify = find_class_from_native_thread(&env);
-
-	 log("MEHTOD Id");
-	 jmethodID methodId = env->GetStaticMethodID(classLibSpotify,
-	 "onTrackReceived", "Ljava/lang/String;)V");
-	 log("after");
-	 //	env->CallStaticVoidMethod(classLibSpotify, methodId,L, b);
-	 log("deleting");
-	 env->DeleteLocalRef(classLibSpotify);
-	 log("SENT");*/
 
 	addTask(on_pltracks_added, "on_pltracks", int_params);
 }
 
 void on_pltracks_added(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track) {
-	log("\t JLOG:%d tracks added \n", int_params.front());
+//	log("\t JLOG:%d tracks added \n", int_params.front());
 }
 
 static void playlist_metadata_updated(sp_playlist *pl, void *userdata) {
 	list < string > string_params;
 
-	if (sp_playlist_is_loaded(pl))
+	if (sp_playlist_is_loaded(pl)) {
+		//log("pl_metadata_updated: %d", metaUpdate++);
 		string_params.push_back(sp_playlist_name(pl));
-	else
-		string_params.push_back("playlist not loaded");
-	sp_playlist_remove_callbacks(pl, &pl_callbacks, NULL);
-	addTask(on_playlist_added, "on_playlist", string_params);
+
+		int numTracks = sp_playlist_num_tracks(pl);
+		for (int i = 0; i < numTracks; i++) {
+			sp_track *t = sp_playlist_track(pl, i);
+			if (!sp_track_is_loaded(t)) {
+				//log("pl_state_failed");
+				return;
+			}
+		}
+		sp_playlist_remove_callbacks(pl, &pl_callbacks, NULL);
+		//	log("pl_state_success numtracks: %d  for playlist: %d",
+		//sp_playlist_num_tracks(pl), metaUpdate++);
+
+		string s = string_params.front();
+		{
+			bool success = true;
+			sp_error error = (sp_error) 0;
+			JNIEnv *env;
+			jclass class_libspotify = find_class_from_native_thread(&env);
+
+			jmethodID methodId = env->GetStaticMethodID(class_libspotify,
+					"onPlaylistNameReceived", "(Ljava/lang/String;)V");
+			env->CallStaticVoidMethod(class_libspotify, methodId,
+					env->NewStringUTF(s.c_str()));
+			log("LocalREF incremented: %d", localRef++);
+			env->DeleteLocalRef(class_libspotify);
+		}
+		{
+			for (int i = 0; i < numTracks; i++) {
+
+				sp_track *t = sp_playlist_track(pl, i);
+
+				if (sp_track_is_loaded(t)) {
+					JNIEnv *env;
+					jclass classLibSpotify = find_class_from_native_thread(
+							&env);
+					//(String name, String playlistName, String artistName, String albumName, String uri);
+					jmethodID methodId =
+							env->GetStaticMethodID(classLibSpotify,
+									"onTrackReceived",
+									"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+
+					sp_link* sl = sp_link_create_from_track(t, 0);
+
+					char buffer[200];
+					int x = sp_link_as_string(sl, buffer, 200);
+					jstring StringArg1 = env->NewStringUTF(sp_track_name(t));
+					jstring StringArg2 = env->NewStringUTF(
+							sp_playlist_name(pl));
+					jstring StringArg3 = env->NewStringUTF(
+							sp_artist_name(sp_track_artist(t, 0)));
+					jstring StringArg4 = env->NewStringUTF(
+							sp_album_name(sp_track_album(t)));
+					//char* buffer;
+					//sp_link_as_string(sp_link_create_from_track(t, 0), buffer,
+					//		200);
+					jstring StringArg5 = env->NewStringUTF(buffer);
+					env->CallStaticVoidMethod(classLibSpotify, methodId,
+							StringArg1, StringArg2, StringArg3, StringArg4,
+							StringArg5);
+					//log(
+					//log("LocalREF incremented: %d", localRef++);
+					env->DeleteLocalRef(StringArg1);
+					env->DeleteLocalRef(StringArg2);
+					env->DeleteLocalRef(StringArg3);
+					env->DeleteLocalRef(StringArg4);
+					env->DeleteLocalRef(StringArg5);
+
+					env->DeleteLocalRef(classLibSpotify);
+
+				} else {
+					log("not loaded");
+				}
+			}
+		}
+
+	}
 
 }
 static void playlist_added(sp_playlistcontainer *pc, sp_playlist *pl,
 		int position, void *userdata) {
-	//pl_callbacks.tracks_added = NULL;
+	pl_callbacks.tracks_added = &pl_tracks_added;
 	pl_callbacks.playlist_metadata_updated = &playlist_metadata_updated;
+	pl_callbacks.playlist_state_changed = NULL;
 	sp_playlist_add_callbacks(pl, &pl_callbacks, NULL);
-
-}
-
-void on_playlist_added(list<int> int_params, list<string> string_params,
-		sp_session *session, sp_track *track) {
-
-	string s = string_params.front();
-
-	bool success = true;
-	sp_error error = (sp_error) 0;
-	JNIEnv *env;
-	jclass class_libspotify = find_class_from_native_thread(&env);
-
-	jmethodID methodId = env->GetStaticMethodID(class_libspotify,
-			"onPlaylistNameReceived", "(Ljava/lang/String;)V");
-	env->CallStaticVoidMethod(class_libspotify, methodId,
-			env->NewStringUTF(s.c_str()));
-	env->DeleteLocalRef(class_libspotify);
-
 }
 
 static void container_loaded(sp_playlistcontainer *pc, void *userdata) {
@@ -279,6 +319,7 @@ void on_player_position_changed(list<int> int_params,
 	jmethodID methodId = env->GetStaticMethodID(classLibSpotify,
 			"onPlayerPositionChanged", "(F)V");
 	env->CallStaticVoidMethod(classLibSpotify, methodId, percentage);
+	//log("LocalREF incremented: %d", localRef++);
 	env->DeleteLocalRef(classLibSpotify);
 }
 
@@ -305,6 +346,7 @@ void on_logged_in(list<int> int_params, list<string> string_params,
 
 	env->CallStaticVoidMethod(class_libspotify, methodId, success,
 			env->NewStringUTF(sp_error_message(error)));
+	//log("LocalREF incremented: %d", localRef++);
 	env->DeleteLocalRef(class_libspotify);
 }
 

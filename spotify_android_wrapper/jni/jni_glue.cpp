@@ -124,7 +124,7 @@ JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_destroy
 	addTask(destroy, "destroy");
 }
 
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchallplaylistnames(JNIEnv *je, jclass jc)
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchallplaylistsandtracks(JNIEnv *je, jclass jc)
 {
 	log("fetchallplaylists");
 	addTask(fetchallplaylistcontainers, "fetchallplaylists");

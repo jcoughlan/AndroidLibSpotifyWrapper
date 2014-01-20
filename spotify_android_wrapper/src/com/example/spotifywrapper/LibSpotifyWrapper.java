@@ -33,16 +33,16 @@ package com.example.spotifywrapper;
 
 import android.os.Handler;
 
+import com.example.spotifywrapper.SpotifyService.AllPlaylistsAndTracksDelegate;
 import com.example.spotifywrapper.SpotifyService.LoginDelegate;
 import com.example.spotifywrapper.SpotifyService.PlayerUpdateDelegate;
-import com.example.spotifywrapper.SpotifyService.PlaylistNamesDelegate;
 
 public class LibSpotifyWrapper {
 
 	private static Handler handler = new Handler();
 	private static LoginDelegate mLoginDelegate;
 	private static PlayerUpdateDelegate mPlayerPositionDelegate;
-	private static PlaylistNamesDelegate mPlaylistNamesDelegate;
+	private static AllPlaylistsAndTracksDelegate mPlaylistsAndTracksDelegate;
 
 	native public static void init(ClassLoader loader, String storagePath);
 
@@ -60,7 +60,7 @@ public class LibSpotifyWrapper {
 
 	native public static void unstar();
 
-	native private static void fetchallplaylistnames();
+	native private static void fetchallplaylistsandtracks();
 
 	public static void loginUser(String username, String password,
 			LoginDelegate loginDelegate) {
@@ -68,9 +68,9 @@ public class LibSpotifyWrapper {
 		login(username, password);
 	}
 
-	public static void fetchAllPlaylistNames(PlaylistNamesDelegate playlistDelegate) {
-		mPlaylistNamesDelegate= playlistDelegate;
-		fetchallplaylistnames();
+	public static void fetchAllPlaylistsAndTracks(AllPlaylistsAndTracksDelegate playlistsAndTracksDelegate) {
+		mPlaylistsAndTracksDelegate= playlistsAndTracksDelegate;
+		fetchallplaylistsandtracks();
 	}
 
 	public static void togglePlay(String uri,
@@ -89,17 +89,17 @@ public class LibSpotifyWrapper {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				mPlaylistNamesDelegate.onPlaylistNameFetched(name);
+				mPlaylistsAndTracksDelegate.onPlaylistNameFetched(name);
 			}
 		});
 
 	}
 	//eventually we will have to put in more than just the track name but htis is fine for now
-	public static void onTrackReceived(final String name) {
+	public static void onTrackReceived(final String name, final String playlistName, final String artistName, final String albumName, final String uri) {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				mPlaylistNamesDelegate.onTrackFetched(name, name );
+				mPlaylistsAndTracksDelegate.onTrackFetched(name, playlistName , artistName, albumName, uri);
 			}
 		});
 

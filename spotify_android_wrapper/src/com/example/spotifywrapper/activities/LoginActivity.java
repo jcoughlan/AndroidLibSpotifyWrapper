@@ -193,10 +193,7 @@ public class LoginActivity extends Activity {
 					Installation.writeInstallationFile(LoginActivity.this,
 							mEmail);
 					showProgress(false);
-					/*
-					 * Intent playerIntent = new Intent(LoginActivity.this,
-					 * PlayerActivity.class); startActivity(playerIntent);
-					 */
+					
 					Intent playlistIntent = new Intent(LoginActivity.this,
 							PlaylistActivity.class);
 					startActivity(playlistIntent);

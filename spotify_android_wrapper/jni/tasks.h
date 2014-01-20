@@ -77,6 +77,4 @@ void on_container_loaded(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track);
 void on_pltracks_added(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track);
-void on_playlist_added(list<int> int_params, list<string> string_params,
-		sp_session *session, sp_track *track);
 #endif /* TASKS_H_ */

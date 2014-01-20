@@ -13,11 +13,12 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.example.classes.Instance;
 import com.example.classes.Playlist;
 import com.example.spotifywrapper.R;
 import com.example.spotifywrapper.ServiceBinder;
 import com.example.spotifywrapper.ServiceBinder.ServiceBinderDelegate;
-import com.example.spotifywrapper.SpotifyService.PlaylistNamesDelegate;
+import com.example.spotifywrapper.SpotifyService.AllPlaylistsAndTracksDelegate;
 
 public class PlaylistActivity extends ListActivity {
 	private int clickCounter = 0;
@@ -40,29 +41,32 @@ public class PlaylistActivity extends ListActivity {
 
 			@Override
 			public void onIsBound() {
-				binder.getService().fetchAllPlaylistNames(
-						new PlaylistNamesDelegate() {
+				binder.getService().fetchAllPlaylistsAndTracks(
+						new AllPlaylistsAndTracksDelegate() {
 
 							@Override
 							public void onPlaylistNameFetched(String name) {
 								addPlaylist(name);
 							}
-
 							@Override
 							public void onTrackFetched(String name,
-									String playlistName) {								
-								for (int i = 0; i < playlistList.size(); i++) {
-									if (playlistList.get(i).GetTitle()
-											.equals(playlistName)) {
-										playlistList.get(i).AddTrack(name);
-										Log.i("Added", "" + name + " to "
-												+ playlistName);
-										return;
+									String playlistName, String artistName,
+									String albumName, String uri) {
+								Log.i("In", "Callback " + playlistName);
+								if (name != null) {
+									for (int i = 0; i < playlistList.size(); i++) {
+										if (playlistList.get(i).GetTitle()
+												.equals(playlistName)) {
+											playlistList.get(i).AddTrack(name,
+													albumName, artistName, uri);
+											return;
+										}
 									}
 								}
-								//if we get here we havent found the tracks playlist
+								// if we get here we havent found the tracks
+								// playlist
+								Log.i("TRACK", "NULL OR NO PLAYLIST");
 							}
-
 						});
 			}
 		});
@@ -76,6 +80,7 @@ public class PlaylistActivity extends ListActivity {
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long arg3) {
 				// TODO Auto-generated method stub
+				Instance.currentPlaylist = playlistList.get(arg2);
 				Intent tracklistIntent = new Intent(PlaylistActivity.this,
 						TracklistActivity.class);
 				startActivity(tracklistIntent);
@@ -88,6 +93,7 @@ public class PlaylistActivity extends ListActivity {
 	public void addPlaylist(String playlistName) {
 		Playlist playlist = new Playlist();
 		playlistList.add(playlist);
+		playlistList.get(playlistList.size() - 1).SetTitle(playlistName);
 		addItems("* " + playlistName);
 	}
 

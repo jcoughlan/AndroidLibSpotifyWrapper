@@ -55,9 +55,9 @@ public class SpotifyService extends Service {
 	private final IBinder mBinder = new LocalBinder();
 	private WifiLock mWifiLock;
 
-	public static interface PlaylistNamesDelegate {
+	public static interface AllPlaylistsAndTracksDelegate {
 		void onPlaylistNameFetched(String name);
-		void onTrackFetched(String name, String playlistName);
+		void onTrackFetched(String name, String playlistName, String artistName, String albumName, String uri);
 
 	}
 
@@ -158,8 +158,8 @@ public class SpotifyService extends Service {
 
 	}
 
-	public void fetchAllPlaylistNames(PlaylistNamesDelegate playlistDelegate) {
-		LibSpotifyWrapper.fetchAllPlaylistNames(playlistDelegate);
+	public void fetchAllPlaylistsAndTracks(AllPlaylistsAndTracksDelegate playlistsAndTracksDelegate) {
+		LibSpotifyWrapper.fetchAllPlaylistsAndTracks(playlistsAndTracksDelegate);
 
 	}
 
