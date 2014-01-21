@@ -43,6 +43,7 @@ static bool s_play_after_loaded = false;
 const char *g_listname;
 static int metaUpdate = 0;
 static int localRef = 0;
+static sp_session* currentSession = NULL;
 static void on_pause();
 static void on_play();
 static void on_starred();
@@ -89,17 +90,47 @@ static void playlist_metadata_updated(sp_playlist *pl, void *userdata) {
 
 		string s = string_params.front();
 		{
+
 			bool success = true;
 			sp_error error = (sp_error) 0;
 			JNIEnv *env;
 			jclass class_libspotify = find_class_from_native_thread(&env);
+			jstring arg1 = env->NewStringUTF(s.c_str());
+			/*const byte* image_id = sp_album_cover(album, SP_IMAGE_SIZE_NORMAL);
+
+			 sp_image* image = sp_image_create(session, image_id);
+			 while (!sp_image_is_loaded(image)) {
+			 sp_session_process_events(session, &timeout);
+			 }
+			 size_t size;
+			 JNIEnv *env;
+			 jclass classLibSpotify = find_class_from_native_thread(&env);
+			 const void* image_data = sp_image_data(image, &size);
+			 jbyteArray result = env->NewByteArray(size);*/
+			int timeout = 0;
+			byte image_id[20];
+			sp_playlist_get_image(pl, image_id);
+			sp_image* image = sp_image_create(currentSession, image_id);
+			while (!sp_image_is_loaded(image)) {
+				sp_session_process_events(currentSession, &timeout);
+			}
+			size_t size;
+			const void* image_data = sp_image_data(image, &size);
+			jbyteArray result = env->NewByteArray(size);
+			log("JLOG: size %d", size);
+			if (size > 0)
+			{
+				log ("GOT image for playlist %s", s.c_str());
+			}
+			env->SetByteArrayRegion(result, 0, size, (const jbyte*) image_data);
 
 			jmethodID methodId = env->GetStaticMethodID(class_libspotify,
-					"onPlaylistNameReceived", "(Ljava/lang/String;)V");
-			env->CallStaticVoidMethod(class_libspotify, methodId,
-					env->NewStringUTF(s.c_str()));
-			log("LocalREF incremented: %d", localRef++);
+					"onPlaylistReceived", "([BLjava/lang/String;)V");
+			env->CallStaticVoidMethod(class_libspotify, methodId, result, arg1);
+			;
 			env->DeleteLocalRef(class_libspotify);
+			env->DeleteLocalRef(arg1);
+			env->DeleteLocalRef(result);
 		}
 		{
 			for (int i = 0; i < numTracks; i++) {
@@ -155,7 +186,7 @@ static void playlist_metadata_updated(sp_playlist *pl, void *userdata) {
 }
 static void playlist_added(sp_playlistcontainer *pc, sp_playlist *pl,
 		int position, void *userdata) {
-	pl_callbacks.tracks_added = &pl_tracks_added;
+	pl_callbacks.tracks_added = NULL;
 	pl_callbacks.playlist_metadata_updated = &playlist_metadata_updated;
 	pl_callbacks.playlist_state_changed = NULL;
 	sp_playlist_add_callbacks(pl, &pl_callbacks, NULL);
@@ -187,6 +218,36 @@ void fetchallplaylistcontainers(list<int> int_params,
 	sp_playlistcontainer_add_callbacks(pc, &pc_callbacks, NULL);
 }
 
+void fetchalbuminfo(list<int> int_params, list<string> string_params,
+		sp_session *session, sp_track *track) {
+	sp_link* tr_link = sp_link_create_from_string(
+			string_params.front().c_str());
+	sp_track* tr = sp_link_as_track(tr_link);
+	sp_album* album = sp_track_album(tr);
+	if (sp_album_is_loaded(album)) {
+		int timeout = 0;
+		const byte* image_id = sp_album_cover(album, SP_IMAGE_SIZE_NORMAL);
+
+		sp_image* image = sp_image_create(session, image_id);
+		while (!sp_image_is_loaded(image)) {
+			sp_session_process_events(session, &timeout);
+		}
+		size_t size;
+		JNIEnv *env;
+		jclass classLibSpotify = find_class_from_native_thread(&env);
+		const void* image_data = sp_image_data(image, &size);
+		jbyteArray result = env->NewByteArray(size);
+		env->SetByteArrayRegion(result, 0, size, (const jbyte*) image_data);
+		jmethodID methodId = env->GetStaticMethodID(classLibSpotify,
+				"onAlbumCoverReceived", "([B)V");
+		env->CallStaticVoidMethod(classLibSpotify, methodId, result);
+		//log("LocalREF incremented: %d", localRef++);
+		env->DeleteLocalRef(classLibSpotify);
+		// env->DeleteLocalRef(arg1);
+	} else {
+	}
+}
+
 void login(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track) {
 	if (session == NULL) {
@@ -195,6 +256,8 @@ void login(list<int> int_params, list<string> string_params,
 		exitl("Logged in before session was initialized");
 	} else
 		log("Login task");
+
+	currentSession = session;
 	string username = string_params.front();
 	string password = string_params.back();
 	sp_session_login(session, username.c_str(), password.c_str(), true, NULL);

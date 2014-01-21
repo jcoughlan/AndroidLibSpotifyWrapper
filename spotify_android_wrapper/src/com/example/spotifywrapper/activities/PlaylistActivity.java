@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import android.annotation.SuppressLint;
 import android.app.ListActivity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -45,14 +47,19 @@ public class PlaylistActivity extends ListActivity {
 						new AllPlaylistsAndTracksDelegate() {
 
 							@Override
-							public void onPlaylistNameFetched(String name) {
-								addPlaylist(name);
+							public void onPlaylistFetched(String name, byte[] imageBytes) {
+								
+								Log.i("TAG", "Imagebytes length: "+ imageBytes.length);
+								byte[] data = imageBytes;
+								Bitmap bmp;
+								bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+								addPlaylist(name, bmp);
 							}
 							@Override
 							public void onTrackFetched(String name,
 									String playlistName, String artistName,
 									String albumName, String uri) {
-								Log.i("In", "Callback " + playlistName);
+								//Log.i("In", "Callback " + playlistName);
 								if (name != null) {
 									for (int i = 0; i < playlistList.size(); i++) {
 										if (playlistList.get(i).GetTitle()
@@ -80,7 +87,7 @@ public class PlaylistActivity extends ListActivity {
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long arg3) {
 				// TODO Auto-generated method stub
-				Instance.currentPlaylist = playlistList.get(arg2);
+				Instance.currentInstance.SetCurrentPlaylist( playlistList.get(arg2));
 				Intent tracklistIntent = new Intent(PlaylistActivity.this,
 						TracklistActivity.class);
 				startActivity(tracklistIntent);
@@ -90,10 +97,11 @@ public class PlaylistActivity extends ListActivity {
 
 	}
 
-	public void addPlaylist(String playlistName) {
+	public void addPlaylist(String playlistName, Bitmap bmp) {
 		Playlist playlist = new Playlist();
 		playlistList.add(playlist);
 		playlistList.get(playlistList.size() - 1).SetTitle(playlistName);
+		playlistList.get(playlistList.size() - 1).SetCover(bmp);
 		addItems("* " + playlistName);
 	}
 

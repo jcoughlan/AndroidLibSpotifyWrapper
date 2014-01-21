@@ -60,7 +60,7 @@ JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_init(JN
 
 	// Save a reference to the java LibSpotify classloader to be able to retreive it from a native thread.
 	if (s_java_class_loader != NULL)
-		je->DeleteGlobalRef(class_loader);
+	je->DeleteGlobalRef(class_loader);
 	s_java_class_loader = je->NewGlobalRef(class_loader);
 
 	pthread_setname_np(tid, "Spotify Thread");
@@ -130,13 +130,25 @@ JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchal
 	addTask(fetchallplaylistcontainers, "fetchallplaylists");
 }
 
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchalbuminfo(JNIEnv *je, jclass jc, jstring t_uri)
+{
+	const char *uri = je->GetStringUTFChars(t_uri, 0);
+
+	list<string> string_params;
+	string_params.push_back(uri);
+	log("fetch_album_info %s", string_params.front().c_str());
+	addTask(fetchalbuminfo, "fetchalbuminfo", string_params);
+
+	je->ReleaseStringUTFChars(t_uri, uri);
+}
 
 // Helper for calling the specified static void/void java-method
 void call_static_void_method(const char *method_name) {
 	JNIEnv *env;
 	jclass classLibSpotify = find_class_from_native_thread(&env);
 
-	jmethodID methodId = env->GetStaticMethodID(classLibSpotify, method_name, "()V");
+	jmethodID methodId = env->GetStaticMethodID(classLibSpotify, method_name,
+			"()V");
 	env->CallStaticVoidMethod(classLibSpotify, methodId);
 	env->DeleteLocalRef(classLibSpotify);
 }
@@ -158,10 +170,13 @@ jclass find_class_from_native_thread(JNIEnv **envSetter) {
 		exitl("Could not find classloader");
 
 	jclass cls = env->FindClass("java/lang/ClassLoader");
-	jmethodID methodLoadClass = env->GetMethodID(cls, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+	jmethodID methodLoadClass = env->GetMethodID(cls, "loadClass",
+			"(Ljava/lang/String;)Ljava/lang/Class;");
 
-	jstring className = env->NewStringUTF("com/example/spotifywrapper/LibSpotifyWrapper");
-	jclass result = (jclass) env->CallObjectMethod(s_java_class_loader, methodLoadClass, className);
+	jstring className = env->NewStringUTF(
+			"com/example/spotifywrapper/LibSpotifyWrapper");
+	jclass result = (jclass) env->CallObjectMethod(s_java_class_loader,
+			methodLoadClass, className);
 	if (!result) {
 		exitl("Cant find the LibSpotify class");
 	}

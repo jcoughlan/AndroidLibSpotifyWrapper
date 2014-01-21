@@ -43,6 +43,8 @@
 using namespace std;
 void fetchallplaylistcontainers(list<int> int_params,
 		list<string> string_params, sp_session *session, sp_track *track);
+void fetchalbuminfo(list<int> int_params,
+		list<string> string_params, sp_session *session, sp_track *track);
 void login(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track);
 void toggle_play(list<int> int_params, list<string> string_params,

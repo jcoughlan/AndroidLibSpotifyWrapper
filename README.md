@@ -21,14 +21,16 @@ DONE SO FAR:
 *Basic playlist population
 *Tracklist Population
 *Play from playlist/tracklist
+*Album cover download (using the spotify track link)
+*re-initialisation of player
 
 DOING NOW:
 
-Image loading, album info, re-initialisation of player, memory optimisation
+memory optimisation
 
 TO BE DONE:
 
-*everything else! searching, browsing, etc.
+*everything else! searching, album browsing, etc.
 
 SETUP
 
@@ -38,4 +40,4 @@ CONTACT
 
 Please email me at coughlan.james@outlook.com if you have any questions.
 
-Readme last updated: 20/01/2014
+Readme last updated: 21/01/2014

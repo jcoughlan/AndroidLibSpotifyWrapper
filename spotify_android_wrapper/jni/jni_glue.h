@@ -43,4 +43,6 @@ JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_unstar(
 
 //
 JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchallplaylistsandtracks(JNIEnv *je, jclass jc);
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchalbuminfo(JNIEnv *je, jclass jc, jstring t_uri);
+
 }

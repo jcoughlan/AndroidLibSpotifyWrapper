@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Currency;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -66,6 +67,7 @@ import com.example.spotifywrapper.Installation;
 import com.example.spotifywrapper.R;
 import com.example.spotifywrapper.RemoteControlReceiver;
 import com.example.spotifywrapper.ServiceBinder;
+import com.example.spotifywrapper.SpotifyService.AlbumInfoDelegate;
 import com.example.spotifywrapper.SpotifyService.PlayerUpdateDelegate;
 
 public class PlayerActivity extends Activity {
@@ -85,10 +87,8 @@ public class PlayerActivity extends Activity {
 
 		@Override
 		public void onPlayerPositionChanged(float pos) {
-
 			SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar);
 			seekBar.setProgress((int) (pos * seekBar.getMax()));
-
 		}
 
 		@Override
@@ -153,7 +153,9 @@ public class PlayerActivity extends Activity {
 			mIndex = 0;
 		mBinder.getService().playNext(mTracks.get(mIndex).getSpotifyUri(),
 				playerPositionDelegate);
+		Instance.currentInstance.SetCurrentTrack(mTracks.get(mIndex));
 		updateTrackState();
+		runTrack();
 	}
 
 	public void playPrev() {
@@ -167,7 +169,9 @@ public class PlayerActivity extends Activity {
 			mIndex = mTracks.size() - 1;
 		mBinder.getService().playNext(mTracks.get(mIndex).getSpotifyUri(),
 				playerPositionDelegate);
+		Instance.currentInstance.SetCurrentTrack(mTracks.get(mIndex));
 		updateTrackState();
+		runTrack();
 
 	}
 
@@ -183,6 +187,7 @@ public class PlayerActivity extends Activity {
 
 	protected void onNewIntent(Intent intent) {
 
+		runTrack();
 		int keycode = intent.getIntExtra("keycode", -1);
 		// if (keycode == -1)
 		// throw new RuntimeException("Could not identify the keycode");
@@ -217,158 +222,158 @@ public class PlayerActivity extends Activity {
 		finish();
 	};
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_player);
-
+	private void runTrack() {
 		final SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar);
 		seekBar.setMax(300);
 
 		Log.e("", "Your login id is " + Installation.id(this));
 		// mWebservice = new WebService(Installation.id(this));
-
 		mBinder = new ServiceBinder(this);
 		mBinder.bindService(new ServiceBinder.ServiceBinderDelegate() {
 
 			@Override
 			public void onIsBound() {
 
-		
+				mTracks = Instance.currentInstance.GetCurrentPlaylist()
+						.GetTrackList().GetTrackListArray();
+				for (int i = 0; i < mTracks.size(); i++) {
+					if (mTracks
+							.get(i)
+							.getSpotifyUri()
+							.equals(Instance.currentInstance.GetCurrentTrack()
+									.getSpotifyUri()))
+						mIndex = i;
+				}
 
-		mTracks = Instance.currentPlaylist.GetTrackList().GetTrackListArray();
-		for (int i = 0; i < mTracks.size(); i++) {
-			if (mTracks.get(i).getSpotifyUri()
-					.equals(Instance.currentTrack.getSpotifyUri()))
-				mIndex = i;
-		}
+				updateTrackState();
 
-		// mWebservice.loadAlbum(new WebService.TracksLoadedDelegate() {
-		// @Override
-		// public void onTracksLoaded(ArrayList<Track> tracks,
-		// String albumUri, String imageUri) {
-		// mTracks = tracks;
-		// mAlbumUri = albumUri;
-		// Set the data of the first track
-		// mIndex = 0;
-		updateTrackState();
-		/*
-		 * AsyncTask<String, Integer, Bitmap> coverLoader = new
-		 * AsyncTask<String, Integer, Bitmap>() {
-		 * 
-		 * @Override protected Bitmap doInBackground(String... uris) { try { URL
-		 * url = new URL(uris[0]); Bitmap bmp = BitmapFactory.decodeStream(url
-		 * .openConnection().getInputStream()); return bmp; } catch
-		 * (MalformedURLException e) { throw new RuntimeException(
-		 * "Cannot load cover image", e); } catch (IOException e) { throw new
-		 * RuntimeException( "Cannot load cover image", e); } }
-		 * 
-		 * protected void onPostExecute(Bitmap bmp) { ((ImageView)
-		 * findViewById(R.id.cover_image)) .setImageBitmap(bmp); } };
-		 */
-		// coverLoader.execute(new String[] { imageUri });
-		// load the track
-		mBinder.getService().playNext(Instance.currentTrack.getSpotifyUri(),
-				playerPositionDelegate);
-		// track might not be loaded yet but assume it is
-		mIsTrackLoaded = true;
-		// }
-		// });
+				mBinder.getService().playNext(
+						Instance.currentInstance.GetCurrentTrack()
+								.getSpotifyUri(), playerPositionDelegate);
+				mBinder.getService().fetchAlbumInfo(
+						mTracks.get(mIndex).getSpotifyUri(),
+						new AlbumInfoDelegate() {
 
-		seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+							@Override
+							public void onImageBytesReceived(byte[] bytes) {
+								// TODO Auto-generated method stub
+								byte[] data = bytes;
+								Bitmap bmp;
+								bmp = BitmapFactory.decodeByteArray(data, 0,
+										data.length);
+								((ImageView) findViewById(R.id.cover_image))
+										.setImageBitmap(bmp);
+							}
+						});
+				// track must be loaded as we have checked it within the library
+				mIsTrackLoaded = true;
 
-			@Override
-			public void onStopTrackingTouch(SeekBar seekBar) {
-				if (mIsTrackLoaded)
-					mBinder.getService().seek(
-							(float) seekBar.getProgress() / seekBar.getMax());
-			}
+				seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 
-			@Override
-			public void onStartTrackingTouch(SeekBar seekBar) {
-			}
+					@Override
+					public void onStopTrackingTouch(SeekBar seekBar) {
+						if (mIsTrackLoaded)
+							mBinder.getService().seek(
+									(float) seekBar.getProgress()
+											/ seekBar.getMax());
+					}
 
-			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress,
-					boolean fromUser) {
+					@Override
+					public void onStartTrackingTouch(SeekBar seekBar) {
+					}
 
+					@Override
+					public void onProgressChanged(SeekBar seekBar,
+							int progress, boolean fromUser) {
+
+					}
+				});
+
+				findViewById(R.id.player_prev).setOnClickListener(
+						new OnClickListener() {
+
+							@Override
+							public void onClick(View v) {
+								playPrev();
+							}
+						});
+
+				findViewById(R.id.player_next).setOnClickListener(
+						new OnClickListener() {
+
+							@Override
+							public void onClick(View v) {
+								playNext();
+							}
+						});
+
+				findViewById(R.id.player_play_pause).setOnClickListener(
+
+				new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						togglePlay();
+					}
+				});
+
+				findViewById(R.id.player_star).setOnClickListener(
+						new OnClickListener() {
+
+							@Override
+							public void onClick(View v) {
+								star();
+
+							}
+						});
+
+				findViewById(R.id.player_next_album).setOnClickListener(
+						new OnClickListener() {
+
+							@Override
+							public void onClick(View v) {
+								if (mTracks.size() == 0 || mAlbumUri == null)
+									return;
+
+								AlertDialog.Builder builder = new AlertDialog.Builder(
+										PlayerActivity.this);
+
+								builder.setMessage(
+										"Are you sure you want to skip to the next Album?")
+										.setTitle("Alert");
+								builder.setPositiveButton("ok",
+										new DialogInterface.OnClickListener() {
+											public void onClick(
+													DialogInterface dialog,
+													int id) {
+												// mWebservice.loadNextAlbum(Installation
+												// .id(PlayerActivity.this),
+												// mAlbumUri);
+											}
+										});
+								builder.setNegativeButton("cancel",
+										new DialogInterface.OnClickListener() {
+											public void onClick(
+													DialogInterface dialog,
+													int id) {
+											}
+										});
+
+								AlertDialog dialog = builder.create();
+								dialog.show();
+							}
+						});
 			}
 		});
+	}
 
-		findViewById(R.id.player_prev).setOnClickListener(
-				new OnClickListener() {
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_player);
 
-					@Override
-					public void onClick(View v) {
-						playPrev();
-					}
-				});
+		runTrack();
 
-		findViewById(R.id.player_next).setOnClickListener(
-				new OnClickListener() {
-
-					@Override
-					public void onClick(View v) {
-						playNext();
-					}
-				});
-
-		findViewById(R.id.player_play_pause).setOnClickListener(
-
-		new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				togglePlay();
-			}
-		});
-
-		findViewById(R.id.player_star).setOnClickListener(
-				new OnClickListener() {
-
-					@Override
-					public void onClick(View v) {
-						star();
-
-					}
-				});
-
-		findViewById(R.id.player_next_album).setOnClickListener(
-				new OnClickListener() {
-
-					@Override
-					public void onClick(View v) {
-						if (mTracks.size() == 0 || mAlbumUri == null)
-							return;
-
-						AlertDialog.Builder builder = new AlertDialog.Builder(
-								PlayerActivity.this);
-
-						builder.setMessage(
-								"Are you sure you want to skip to the next Album?")
-								.setTitle("Alert");
-						builder.setPositiveButton("ok",
-								new DialogInterface.OnClickListener() {
-									public void onClick(DialogInterface dialog,
-											int id) {
-										// mWebservice.loadNextAlbum(Installation
-										// .id(PlayerActivity.this),
-										// mAlbumUri);
-									}
-								});
-						builder.setNegativeButton("cancel",
-								new DialogInterface.OnClickListener() {
-									public void onClick(DialogInterface dialog,
-											int id) {
-									}
-								});
-
-						AlertDialog dialog = builder.create();
-						dialog.show();
-					}
-				});
-			}
-		});
 	}
 
 	@Override

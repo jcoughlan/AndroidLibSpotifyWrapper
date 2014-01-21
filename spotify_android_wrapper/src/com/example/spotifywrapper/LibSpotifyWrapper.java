@@ -33,6 +33,7 @@ package com.example.spotifywrapper;
 
 import android.os.Handler;
 
+import com.example.spotifywrapper.SpotifyService.AlbumInfoDelegate;
 import com.example.spotifywrapper.SpotifyService.AllPlaylistsAndTracksDelegate;
 import com.example.spotifywrapper.SpotifyService.LoginDelegate;
 import com.example.spotifywrapper.SpotifyService.PlayerUpdateDelegate;
@@ -43,6 +44,7 @@ public class LibSpotifyWrapper {
 	private static LoginDelegate mLoginDelegate;
 	private static PlayerUpdateDelegate mPlayerPositionDelegate;
 	private static AllPlaylistsAndTracksDelegate mPlaylistsAndTracksDelegate;
+	private static AlbumInfoDelegate mAlbumInfoDelegate;
 
 	native public static void init(ClassLoader loader, String storagePath);
 
@@ -61,15 +63,23 @@ public class LibSpotifyWrapper {
 	native public static void unstar();
 
 	native private static void fetchallplaylistsandtracks();
+	native private static void fetchalbuminfo(String trackUri);
 
 	public static void loginUser(String username, String password,
 			LoginDelegate loginDelegate) {
 		mLoginDelegate = loginDelegate;
 		login(username, password);
 	}
+	
+	public static void fetchAlbumInfo(String trackUri, AlbumInfoDelegate albumInfoDelegate)
+	{
+		mAlbumInfoDelegate = albumInfoDelegate;
+		fetchalbuminfo(trackUri);
+	}
 
-	public static void fetchAllPlaylistsAndTracks(AllPlaylistsAndTracksDelegate playlistsAndTracksDelegate) {
-		mPlaylistsAndTracksDelegate= playlistsAndTracksDelegate;
+	public static void fetchAllPlaylistsAndTracks(
+			AllPlaylistsAndTracksDelegate playlistsAndTracksDelegate) {
+		mPlaylistsAndTracksDelegate = playlistsAndTracksDelegate;
 		fetchallplaylistsandtracks();
 	}
 
@@ -85,21 +95,26 @@ public class LibSpotifyWrapper {
 		playnext(uri);
 	}
 
-	public static void onPlaylistNameReceived(final String name) {
+	public static void onPlaylistReceived( final byte[] imageBytes,final String name) {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				mPlaylistsAndTracksDelegate.onPlaylistNameFetched(name);
+				mPlaylistsAndTracksDelegate.onPlaylistFetched(name, imageBytes);
 			}
 		});
 
 	}
-	//eventually we will have to put in more than just the track name but htis is fine for now
-	public static void onTrackReceived(final String name, final String playlistName, final String artistName, final String albumName, final String uri) {
+
+	// eventually we will have to put in more than just the track name but htis
+	// is fine for now
+	public static void onTrackReceived(final String name,
+			final String playlistName, final String artistName,
+			final String albumName, final String uri) {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				mPlaylistsAndTracksDelegate.onTrackFetched(name, playlistName , artistName, albumName, uri);
+				mPlaylistsAndTracksDelegate.onTrackFetched(name, playlistName,
+						artistName, albumName, uri);
 			}
 		});
 
@@ -117,7 +132,15 @@ public class LibSpotifyWrapper {
 		});
 
 	}
-
+	public static void onAlbumCoverReceived( final byte[] bytes)
+	{
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				mAlbumInfoDelegate.onImageBytesReceived(bytes);
+			}
+		});
+	}
 	public static void onPlayerEndOfTrack() {
 		handler.post(new Runnable() {
 

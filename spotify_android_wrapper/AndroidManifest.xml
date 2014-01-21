@@ -46,7 +46,7 @@
         </activity>
         <activity
             android:name="com.example.spotifywrapper.activities.PlayerActivity"
-          
+          android:launchMode="singleInstance"
             android:screenOrientation="portrait" >
         </activity>
 
