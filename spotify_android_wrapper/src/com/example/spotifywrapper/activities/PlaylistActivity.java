@@ -15,7 +15,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.example.classes.Instance;
+import com.example.classes.AppInstance;
 import com.example.classes.Playlist;
 import com.example.spotifywrapper.R;
 import com.example.spotifywrapper.ServiceBinder;
@@ -47,19 +47,23 @@ public class PlaylistActivity extends ListActivity {
 						new AllPlaylistsAndTracksDelegate() {
 
 							@Override
-							public void onPlaylistFetched(String name, byte[] imageBytes) {
-								
-								Log.i("TAG", "Imagebytes length: "+ imageBytes.length);
+							public void onPlaylistFetched(String name,
+									byte[] imageBytes) {
+								// Add a playlist
 								byte[] data = imageBytes;
 								Bitmap bmp;
-								bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+								bmp = BitmapFactory.decodeByteArray(data, 0,
+										data.length);
 								addPlaylist(name, bmp);
 							}
+
 							@Override
 							public void onTrackFetched(String name,
 									String playlistName, String artistName,
 									String albumName, String uri) {
-								//Log.i("In", "Callback " + playlistName);
+
+								// send track to corresponding playlist and
+								// populate tracklist
 								if (name != null) {
 									for (int i = 0; i < playlistList.size(); i++) {
 										if (playlistList.get(i).GetTitle()
@@ -71,12 +75,13 @@ public class PlaylistActivity extends ListActivity {
 									}
 								}
 								// if we get here we havent found the tracks
-								// playlist
+								// (should never reach here!)
 								Log.i("TRACK", "NULL OR NO PLAYLIST");
 							}
 						});
 			}
 		});
+
 		adapter = new ArrayAdapter<String>(this,
 				android.R.layout.simple_list_item_1, listItems);
 		setListAdapter(adapter);
@@ -86,18 +91,20 @@ public class PlaylistActivity extends ListActivity {
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long arg3) {
-				// TODO Auto-generated method stub
-				Instance.currentInstance.SetCurrentPlaylist( playlistList.get(arg2));
+				// when clicked, set as current playlist and go to tracklist
+				// view
+				AppInstance.currentInstance.SetCurrentPlaylist(playlistList
+						.get(arg2));
 				Intent tracklistIntent = new Intent(PlaylistActivity.this,
 						TracklistActivity.class);
 				startActivity(tracklistIntent);
-
 			}
 		});
 
 	}
 
 	public void addPlaylist(String playlistName, Bitmap bmp) {
+		// set title and cover of playlist
 		Playlist playlist = new Playlist();
 		playlistList.add(playlist);
 		playlistList.get(playlistList.size() - 1).SetTitle(playlistName);

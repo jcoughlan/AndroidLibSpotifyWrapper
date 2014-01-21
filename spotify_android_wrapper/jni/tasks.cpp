@@ -41,8 +41,6 @@ static sp_playlistcontainer *playlistContainer = NULL;
 static bool s_is_waiting_for_metadata = false;
 static bool s_play_after_loaded = false;
 const char *g_listname;
-static int metaUpdate = 0;
-static int localRef = 0;
 static sp_session* currentSession = NULL;
 static void on_pause();
 static void on_play();
@@ -56,57 +54,38 @@ static void container_loaded(sp_playlistcontainer *pc, void *userdata);
 //playlist track callback
 static sp_playlist_callbacks pl_callbacks = { };
 
+//not currently used
 static void pl_tracks_added(sp_playlist *pl, sp_track * const * tracks,
 		int num_tracks, int position, void *userdata) {
-	list<int> int_params;
-	int_params.push_back(num_tracks);
-
-	addTask(on_pltracks_added, "on_pltracks", int_params);
 }
 
+//not currently used
 void on_pltracks_added(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track) {
-//	log("\t JLOG:%d tracks added \n", int_params.front());
 }
 
 static void playlist_metadata_updated(sp_playlist *pl, void *userdata) {
 	list < string > string_params;
-
 	if (sp_playlist_is_loaded(pl)) {
-		//log("pl_metadata_updated: %d", metaUpdate++);
 		string_params.push_back(sp_playlist_name(pl));
 
 		int numTracks = sp_playlist_num_tracks(pl);
 		for (int i = 0; i < numTracks; i++) {
 			sp_track *t = sp_playlist_track(pl, i);
 			if (!sp_track_is_loaded(t)) {
-				//log("pl_state_failed");
 				return;
 			}
 		}
 		sp_playlist_remove_callbacks(pl, &pl_callbacks, NULL);
-		//	log("pl_state_success numtracks: %d  for playlist: %d",
-		//sp_playlist_num_tracks(pl), metaUpdate++);
 
 		string s = string_params.front();
+		//playlist to java callback
 		{
-
 			bool success = true;
 			sp_error error = (sp_error) 0;
 			JNIEnv *env;
 			jclass class_libspotify = find_class_from_native_thread(&env);
 			jstring arg1 = env->NewStringUTF(s.c_str());
-			/*const byte* image_id = sp_album_cover(album, SP_IMAGE_SIZE_NORMAL);
-
-			 sp_image* image = sp_image_create(session, image_id);
-			 while (!sp_image_is_loaded(image)) {
-			 sp_session_process_events(session, &timeout);
-			 }
-			 size_t size;
-			 JNIEnv *env;
-			 jclass classLibSpotify = find_class_from_native_thread(&env);
-			 const void* image_data = sp_image_data(image, &size);
-			 jbyteArray result = env->NewByteArray(size);*/
 			int timeout = 0;
 			byte image_id[20];
 			sp_playlist_get_image(pl, image_id);
@@ -118,9 +97,8 @@ static void playlist_metadata_updated(sp_playlist *pl, void *userdata) {
 			const void* image_data = sp_image_data(image, &size);
 			jbyteArray result = env->NewByteArray(size);
 			log("JLOG: size %d", size);
-			if (size > 0)
-			{
-				log ("GOT image for playlist %s", s.c_str());
+			if (size > 0) {
+				log("GOT image for playlist %s", s.c_str());
 			}
 			env->SetByteArrayRegion(result, 0, size, (const jbyte*) image_data);
 
@@ -132,6 +110,7 @@ static void playlist_metadata_updated(sp_playlist *pl, void *userdata) {
 			env->DeleteLocalRef(arg1);
 			env->DeleteLocalRef(result);
 		}
+		//track to java callback
 		{
 			for (int i = 0; i < numTracks; i++) {
 
@@ -141,14 +120,12 @@ static void playlist_metadata_updated(sp_playlist *pl, void *userdata) {
 					JNIEnv *env;
 					jclass classLibSpotify = find_class_from_native_thread(
 							&env);
-					//(String name, String playlistName, String artistName, String albumName, String uri);
 					jmethodID methodId =
 							env->GetStaticMethodID(classLibSpotify,
 									"onTrackReceived",
 									"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 
 					sp_link* sl = sp_link_create_from_track(t, 0);
-
 					char buffer[200];
 					int x = sp_link_as_string(sl, buffer, 200);
 					jstring StringArg1 = env->NewStringUTF(sp_track_name(t));
@@ -158,31 +135,20 @@ static void playlist_metadata_updated(sp_playlist *pl, void *userdata) {
 							sp_artist_name(sp_track_artist(t, 0)));
 					jstring StringArg4 = env->NewStringUTF(
 							sp_album_name(sp_track_album(t)));
-					//char* buffer;
-					//sp_link_as_string(sp_link_create_from_track(t, 0), buffer,
-					//		200);
 					jstring StringArg5 = env->NewStringUTF(buffer);
 					env->CallStaticVoidMethod(classLibSpotify, methodId,
 							StringArg1, StringArg2, StringArg3, StringArg4,
 							StringArg5);
-					//log(
-					//log("LocalREF incremented: %d", localRef++);
 					env->DeleteLocalRef(StringArg1);
 					env->DeleteLocalRef(StringArg2);
 					env->DeleteLocalRef(StringArg3);
 					env->DeleteLocalRef(StringArg4);
 					env->DeleteLocalRef(StringArg5);
-
 					env->DeleteLocalRef(classLibSpotify);
-
-				} else {
-					log("not loaded");
 				}
 			}
 		}
-
 	}
-
 }
 static void playlist_added(sp_playlistcontainer *pc, sp_playlist *pl,
 		int position, void *userdata) {
@@ -193,31 +159,29 @@ static void playlist_added(sp_playlistcontainer *pc, sp_playlist *pl,
 }
 
 static void container_loaded(sp_playlistcontainer *pc, void *userdata) {
-	addTask(on_container_loaded, "token_lost:pause");
+	addTask(on_container_loaded, "on_container_loaded");
 }
+
 static sp_playlistcontainer_callbacks pc_callbacks = { &playlist_added, NULL,
 		NULL, &container_loaded };
 
+//just to remove all our container callbacks
 void on_container_loaded(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track) {
 	sp_playlistcontainer_remove_callbacks(playlistContainer, &pc_callbacks,
 			NULL);
-
-	for (int i = 0; i < sp_playlistcontainer_num_playlists(playlistContainer);
-			++i) {
-		sp_playlist *pl = sp_playlistcontainer_playlist(playlistContainer, i);
-	}
-
 }
 
+//fetches all playlists containers (pointers to the playlists/no real data)
 void fetchallplaylistcontainers(list<int> int_params,
 		list<string> string_params, sp_session *session, sp_track *track) {
 	sp_playlistcontainer *pc = sp_session_playlistcontainer(session);
-	;
+
 	playlistContainer = pc;
 	sp_playlistcontainer_add_callbacks(pc, &pc_callbacks, NULL);
 }
 
+//fetch album info (only returns the byte array for images right now)
 void fetchalbuminfo(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track) {
 	sp_link* tr_link = sp_link_create_from_string(
@@ -241,9 +205,9 @@ void fetchalbuminfo(list<int> int_params, list<string> string_params,
 		jmethodID methodId = env->GetStaticMethodID(classLibSpotify,
 				"onAlbumCoverReceived", "([B)V");
 		env->CallStaticVoidMethod(classLibSpotify, methodId, result);
-		//log("LocalREF incremented: %d", localRef++);
 		env->DeleteLocalRef(classLibSpotify);
-		// env->DeleteLocalRef(arg1);
+		env->DeleteLocalRef(result);
+
 	} else {
 	}
 }
@@ -251,11 +215,8 @@ void fetchalbuminfo(list<int> int_params, list<string> string_params,
 void login(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track) {
 	if (session == NULL) {
-		log("Logged in before session was initialized");
-
 		exitl("Logged in before session was initialized");
-	} else
-		log("Login task");
+	}
 
 	currentSession = session;
 	string username = string_params.front();
@@ -382,18 +343,12 @@ void on_player_position_changed(list<int> int_params,
 	jmethodID methodId = env->GetStaticMethodID(classLibSpotify,
 			"onPlayerPositionChanged", "(F)V");
 	env->CallStaticVoidMethod(classLibSpotify, methodId, percentage);
-	//log("LocalREF incremented: %d", localRef++);
 	env->DeleteLocalRef(classLibSpotify);
 }
 
 void on_end_of_track(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track) {
 	call_static_void_method("onEndOfTrack");
-}
-
-void on_allplaylistcontainers_fetched(list<int> int_params,
-		list<string> string_params, sp_session *session, sp_track *track) {
-	call_static_void_method("onAllPlaylistContainersFetched");
 }
 
 void on_logged_in(list<int> int_params, list<string> string_params,
@@ -403,14 +358,13 @@ void on_logged_in(list<int> int_params, list<string> string_params,
 
 	JNIEnv *env;
 	jclass class_libspotify = find_class_from_native_thread(&env);
-
+	jstring arg1 = env->NewStringUTF(sp_error_message(error));
 	jmethodID methodId = env->GetStaticMethodID(class_libspotify, "onLogin",
 			"(ZLjava/lang/String;)V");
 
-	env->CallStaticVoidMethod(class_libspotify, methodId, success,
-			env->NewStringUTF(sp_error_message(error)));
-	//log("LocalREF incremented: %d", localRef++);
+	env->CallStaticVoidMethod(class_libspotify, methodId, success, arg1);
 	env->DeleteLocalRef(class_libspotify);
+	env->DeleteLocalRef(arg1);
 }
 
 void on_player_pause(list<int> int_params, list<string> string_params,

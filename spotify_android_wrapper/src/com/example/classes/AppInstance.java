@@ -1,7 +1,7 @@
 package com.example.classes;
 
-public class Instance {
-	public static Instance currentInstance = new Instance();
+public class AppInstance {
+	public static AppInstance currentInstance = new AppInstance();
 	
 	private Playlist currentPlaylist = null;
 	private Track currentTrack = null;

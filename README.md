@@ -22,15 +22,17 @@ DONE SO FAR:
 *Tracklist Population
 *Play from playlist/tracklist
 *Album cover download (using the spotify track link)
+*Playlist cover download (if there is one, otherwise use cover for first track on playlist)
 *re-initialisation of player
 
 DOING NOW:
 
-memory optimisation
+memory optimisation, memory release
 
 TO BE DONE:
 
-*everything else! searching, album browsing, etc.
+* Layout (I havent put any effort into this as of yet)
+* Everything else! searching, album browsing, all other calls to library etc.
 
 SETUP
 

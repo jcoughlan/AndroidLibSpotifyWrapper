@@ -197,7 +197,6 @@ public class LoginActivity extends Activity {
 					Intent playlistIntent = new Intent(LoginActivity.this,
 							PlaylistActivity.class);
 					startActivity(playlistIntent);
-
 				}
 
 				@Override

@@ -32,11 +32,7 @@
  */
 package com.example.spotifywrapper.activities;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Currency;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -47,7 +43,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
@@ -61,7 +56,7 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
-import com.example.classes.Instance;
+import com.example.classes.AppInstance;
 import com.example.classes.Track;
 import com.example.spotifywrapper.Installation;
 import com.example.spotifywrapper.R;
@@ -153,7 +148,7 @@ public class PlayerActivity extends Activity {
 			mIndex = 0;
 		mBinder.getService().playNext(mTracks.get(mIndex).getSpotifyUri(),
 				playerPositionDelegate);
-		Instance.currentInstance.SetCurrentTrack(mTracks.get(mIndex));
+		AppInstance.currentInstance.SetCurrentTrack(mTracks.get(mIndex));
 		updateTrackState();
 		runTrack();
 	}
@@ -169,7 +164,7 @@ public class PlayerActivity extends Activity {
 			mIndex = mTracks.size() - 1;
 		mBinder.getService().playNext(mTracks.get(mIndex).getSpotifyUri(),
 				playerPositionDelegate);
-		Instance.currentInstance.SetCurrentTrack(mTracks.get(mIndex));
+		AppInstance.currentInstance.SetCurrentTrack(mTracks.get(mIndex));
 		updateTrackState();
 		runTrack();
 
@@ -222,6 +217,8 @@ public class PlayerActivity extends Activity {
 		finish();
 	};
 
+	//moved this code from onCreate so as every time we 
+	//want to update the track we can just call this.
 	private void runTrack() {
 		final SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar);
 		seekBar.setMax(300);
@@ -234,13 +231,13 @@ public class PlayerActivity extends Activity {
 			@Override
 			public void onIsBound() {
 
-				mTracks = Instance.currentInstance.GetCurrentPlaylist()
+				mTracks = AppInstance.currentInstance.GetCurrentPlaylist()
 						.GetTrackList().GetTrackListArray();
 				for (int i = 0; i < mTracks.size(); i++) {
 					if (mTracks
 							.get(i)
 							.getSpotifyUri()
-							.equals(Instance.currentInstance.GetCurrentTrack()
+							.equals(AppInstance.currentInstance.GetCurrentTrack()
 									.getSpotifyUri()))
 						mIndex = i;
 				}
@@ -248,7 +245,7 @@ public class PlayerActivity extends Activity {
 				updateTrackState();
 
 				mBinder.getService().playNext(
-						Instance.currentInstance.GetCurrentTrack()
+						AppInstance.currentInstance.GetCurrentTrack()
 								.getSpotifyUri(), playerPositionDelegate);
 				mBinder.getService().fetchAlbumInfo(
 						mTracks.get(mIndex).getSpotifyUri(),
@@ -256,7 +253,7 @@ public class PlayerActivity extends Activity {
 
 							@Override
 							public void onImageBytesReceived(byte[] bytes) {
-								// TODO Auto-generated method stub
+								// TODO run all this asynchronously
 								byte[] data = bytes;
 								Bitmap bmp;
 								bmp = BitmapFactory.decodeByteArray(data, 0,
@@ -265,6 +262,7 @@ public class PlayerActivity extends Activity {
 										.setImageBitmap(bmp);
 							}
 						});
+				
 				// track must be loaded as we have checked it within the library
 				mIsTrackLoaded = true;
 
@@ -346,9 +344,6 @@ public class PlayerActivity extends Activity {
 											public void onClick(
 													DialogInterface dialog,
 													int id) {
-												// mWebservice.loadNextAlbum(Installation
-												// .id(PlayerActivity.this),
-												// mAlbumUri);
 											}
 										});
 								builder.setNegativeButton("cancel",

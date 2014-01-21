@@ -33,9 +33,8 @@ public class Playlist {
 	public void SetCover(Bitmap cover) {
 		coverBitmap = cover;
 	}
-	
-	public Bitmap GetCover()
-	{
+
+	public Bitmap GetCover() {
 		return coverBitmap;
 	}
 
