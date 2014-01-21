@@ -12,6 +12,11 @@ FLOW
 *Login->ShowPlaylists->SelectPlaylist->ViewSongDetails->PlaySong
 
 The app isnt aimed at providing a particularly good user experience but rather a type of Spotify HelloWorld to showcase the integration with libSpotify, and make it easy for others to copy,  as I don't believe there is a fully fledged libSpotify wrapper available for Android yet.
+
+KNOWN ISSUES:
+
+*Regular Spotify Library crashes-> Not sure why this is happening but its not a huge concern as of yet.
+*'Service leaked' Android Error-> Looking into this .
 														
 DONE SO FAR:
 
