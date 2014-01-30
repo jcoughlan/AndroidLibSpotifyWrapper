@@ -33,16 +33,20 @@ package com.example.spotifywrapper;
 
 import android.os.Handler;
 
+import com.example.spotifywrapper.SpotifyService.AlbumInfoDelegate;
+import com.example.spotifywrapper.SpotifyService.AllPlaylistsAndTracksDelegate;
 import com.example.spotifywrapper.SpotifyService.LoginDelegate;
 import com.example.spotifywrapper.SpotifyService.PlayerUpdateDelegate;
-import com.example.spotifywrapper.SpotifyService.PlaylistNamesDelegate;
+import com.example.spotifywrapper.SpotifyService.SearchDelegate;
 
 public class LibSpotifyWrapper {
 
 	private static Handler handler = new Handler();
 	private static LoginDelegate mLoginDelegate;
 	private static PlayerUpdateDelegate mPlayerPositionDelegate;
-	private static PlaylistNamesDelegate mPlaylistNamesDelegate;
+	private static AllPlaylistsAndTracksDelegate mPlaylistsAndTracksDelegate;
+	private static AlbumInfoDelegate mAlbumInfoDelegate;
+	private static SearchDelegate mSearchDelegate;
 
 	native public static void init(ClassLoader loader, String storagePath);
 
@@ -60,7 +64,12 @@ public class LibSpotifyWrapper {
 
 	native public static void unstar();
 
-	native private static void fetchallplaylistnames();
+	native private static void fetchallplaylistsandtracks();
+
+	native private static void search(String query, int trackCount,
+			int artistCount, int albumCount, int playlistCount);
+
+	native private static void fetchalbuminfo(String trackUri);
 
 	public static void loginUser(String username, String password,
 			LoginDelegate loginDelegate) {
@@ -68,9 +77,24 @@ public class LibSpotifyWrapper {
 		login(username, password);
 	}
 
-	public static void fetchAllPlaylistNames(PlaylistNamesDelegate playlistDelegate) {
-		mPlaylistNamesDelegate= playlistDelegate;
-		fetchallplaylistnames();
+	public static void fetchAlbumInfo(String trackUri,
+			AlbumInfoDelegate albumInfoDelegate) {
+		mAlbumInfoDelegate = albumInfoDelegate;
+		fetchalbuminfo(trackUri);
+	}
+
+	public static void fetchAllPlaylistsAndTracks(
+			AllPlaylistsAndTracksDelegate playlistsAndTracksDelegate) {
+		mPlaylistsAndTracksDelegate = playlistsAndTracksDelegate;
+		fetchallplaylistsandtracks();
+	}
+
+	public static void fetchSearchResults(String query, int trackCount,
+			int albumCount, int artistCount, int playlistCount,
+			SearchDelegate searchDelegate) {
+		mSearchDelegate = searchDelegate;
+		search(query, trackCount, albumCount, artistCount, playlistCount);
+
 	}
 
 	public static void togglePlay(String uri,
@@ -85,21 +109,71 @@ public class LibSpotifyWrapper {
 		playnext(uri);
 	}
 
-	public static void onPlaylistNameReceived(final String name) {
+	public static void onPlaylistReceived(final byte[] imageBytes,
+			final String name) {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				mPlaylistNamesDelegate.onPlaylistNameFetched(name);
+				mPlaylistsAndTracksDelegate.onPlaylistFetched(name, imageBytes);
 			}
 		});
 
 	}
-	//eventually we will have to put in more than just the track name but htis is fine for now
-	public static void onTrackReceived(final String name) {
+
+	public static void onSearchResultReceived(final String type,
+			final String name) {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				mPlaylistNamesDelegate.onTrackFetched(name, name );
+				if (type.contains("album"))
+					mSearchDelegate.onAlbumSearchReceived(name);
+				else if (type.contains("track"))
+					mSearchDelegate.onTrackSearchReceived(name);
+				else if (type.contains("playlist"))
+					mSearchDelegate.onPlaylistSearchReceived(name);
+			}
+		});
+
+	}
+
+	public static void onTrackReceived(final String name,
+			final String playlistName, final String artistName,
+			final String albumName, final String uri) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (mPlaylistsAndTracksDelegate != null)
+				mPlaylistsAndTracksDelegate.onTrackFetched(name, playlistName,
+						artistName, albumName, uri);
+			}
+		});
+
+	}
+
+	public static void onConnectionError(final String message) {
+		handler.post(new Runnable() {
+
+			@Override
+			public void run() {
+				/*
+				 * // TODO Auto-generated method stub Context c = null; Context
+				 * b = LoginActivity.this; new AlertDialog.Builder(c)
+				 * .setTitle("Connection Error!") .setMessage(message)
+				 * .setPositiveButton("OK", new
+				 * DialogInterface.OnClickListener() { public void
+				 * onClick(DialogInterface dialog, int which) { // continue with
+				 * delete } }).show();
+				 */
+			}
+		});
+	}
+
+	public static void onAllPlaylistsAndTracksReceived() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				if (mPlaylistsAndTracksDelegate != null)
+				mPlaylistsAndTracksDelegate.onAllPlaylistsAndTracksLoaded();
 			}
 		});
 
@@ -116,6 +190,15 @@ public class LibSpotifyWrapper {
 			}
 		});
 
+	}
+
+	public static void onAlbumCoverReceived(final byte[] bytes) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				mAlbumInfoDelegate.onImageBytesReceived(bytes);
+			}
+		});
 	}
 
 	public static void onPlayerEndOfTrack() {

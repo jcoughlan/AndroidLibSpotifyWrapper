@@ -55,17 +55,27 @@ public class SpotifyService extends Service {
 	private final IBinder mBinder = new LocalBinder();
 	private WifiLock mWifiLock;
 
-	public static interface PlaylistNamesDelegate {
-		void onPlaylistNameFetched(String name);
-		void onTrackFetched(String name, String playlistName);
-
+	public static interface AllPlaylistsAndTracksDelegate {
+		void onPlaylistFetched(String name, byte[] imageBytes);
+		void onTrackFetched(String name, String playlistName, String artistName, String albumName, String uri);
+		void onAllPlaylistsAndTracksLoaded();
 	}
 
 	public static interface LoginDelegate {
 		void onLogin();
 
 		void onLoginFailed(String message);
-
+	}
+	
+	public static interface AlbumInfoDelegate {
+		void onImageBytesReceived(byte[] bytes);
+	}
+	
+	public static interface SearchDelegate {
+		void onTrackSearchReceived(String trackName);
+		void onAlbumSearchReceived(String albumName);
+		void onPlaylistSearchReceived(String playlistName);
+		void onArtistSearchReceived(String artistName);
 	}
 
 	public static interface PlayerUpdateDelegate {
@@ -104,11 +114,11 @@ public class SpotifyService extends Service {
 				Environment.getExternalStorageDirectory().getAbsolutePath()
 						+ "/Android/data/com.example.spotifywrapper");
 		Log.i("initialising", "initiliased");
-		//mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
 		// Display a notification about us starting. We put an icon in the
 		// status bar.
-		//showNotification();
+		showNotification();
 
 		mWifiLock = ((WifiManager) getSystemService(Context.WIFI_SERVICE))
 				.createWifiLock(WifiManager.WIFI_MODE_FULL, "mylock");
@@ -140,6 +150,7 @@ public class SpotifyService extends Service {
 		return mBinder;
 	}
 
+	@SuppressWarnings("deprecation")
 	private void showNotification() {
 		// TODO Deprecated... replace
 		Notification notification = new Notification(
@@ -155,12 +166,18 @@ public class SpotifyService extends Service {
 
 	public void login(String email, String password, LoginDelegate loginDelegate) {
 		LibSpotifyWrapper.loginUser(email, password, loginDelegate);
-
 	}
 
-	public void fetchAllPlaylistNames(PlaylistNamesDelegate playlistDelegate) {
-		LibSpotifyWrapper.fetchAllPlaylistNames(playlistDelegate);
-
+	public void fetchAllPlaylistsAndTracks(AllPlaylistsAndTracksDelegate playlistsAndTracksDelegate) {
+		LibSpotifyWrapper.fetchAllPlaylistsAndTracks(playlistsAndTracksDelegate);
+	}
+	
+	public void fetchSearchResults(String query, int trackCount, int albumCount, int artistCount, int playlistCount, SearchDelegate searchDelegate) {
+		LibSpotifyWrapper.fetchSearchResults(query, trackCount, albumCount, artistCount, playlistCount,searchDelegate);
+	}
+	
+	public void fetchAlbumInfo(String trackUri, AlbumInfoDelegate albumInfoDelegate) {
+		LibSpotifyWrapper.fetchAlbumInfo(trackUri, albumInfoDelegate);
 	}
 
 	public void togglePlay(String uri,

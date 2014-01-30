@@ -1,5 +1,4 @@
 LOCAL_PATH := $(call my-dir)
-
 include $(CLEAR_VARS)
 LOCAL_MODULE := spotify
 LOCAL_SRC_FILES := libspotify.so

@@ -43,7 +43,15 @@
 using namespace std;
 void fetchallplaylistcontainers(list<int> int_params,
 		list<string> string_params, sp_session *session, sp_track *track);
+void fetchalbuminfo(list<int> int_params, list<string> string_params,
+		sp_session *session, sp_track *track);
+void search(list<int> int_params, list<string> string_params,
+		sp_session *session, sp_track *track);
+void check_connection(list<int> int_params, list<string> string_params,
+		sp_session *session, sp_track *track);
 void login(list<int> int_params, list<string> string_params,
+		sp_session *session, sp_track *track);
+void logout(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track);
 void toggle_play(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track);
@@ -61,11 +69,9 @@ void load_and_play_track_after_metadata_updated(list<int> int_params,
 		list<string> string_params, sp_session *session, sp_track *track);
 void destroy(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track);
-
-// Callbacks to java
-void on_allplaylistcontainers_fetched(list<int> int_params,
-		list<string> string_params, sp_session *session, sp_track *track);
 void on_logged_in(list<int> int_params, list<string> string_params,
+		sp_session *session, sp_track *track);
+void on_logged_out(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track);
 void on_player_position_changed(list<int> int_params,
 		list<string> string_params, sp_session *session, sp_track *track);
@@ -77,6 +83,9 @@ void on_container_loaded(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track);
 void on_pltracks_added(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track);
-void on_playlist_added(list<int> int_params, list<string> string_params,
+
+void on_tracks_added_java_callback(list<int> int_params, list<string> string_params,
+		sp_session *session, sp_track *track);
+void on_playlist_added_java_callback(list<int> int_params, list<string> string_params,
 		sp_session *session, sp_track *track);
 #endif /* TASKS_H_ */

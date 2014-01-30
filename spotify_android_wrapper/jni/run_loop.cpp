@@ -43,7 +43,8 @@
 using namespace std;
 
 // Defined in the sound_driver to keep the buffer logic together
-int music_delivery(sp_session *sess, const sp_audioformat *format, const void *frames, int num_frames);
+int music_delivery(sp_session *sess, const sp_audioformat *format,
+		const void *frames, int num_frames);
 
 // There is always only one track that can be played/paused
 static sp_track *s_track = NULL;
@@ -55,8 +56,10 @@ struct Task {
 	list<string> string_params;
 	string name;
 
-	Task(task_fptr _fptr, string _name, list<int> _int_params, list<string> _string_params) :
-			fptr(_fptr), name(_name), int_params(_int_params), string_params(_string_params) {
+	Task(task_fptr _fptr, string _name, list<int> _int_params,
+			list<string> _string_params) :
+			fptr(_fptr), name(_name), int_params(_int_params), string_params(
+					_string_params) {
 	}
 };
 
@@ -73,7 +76,8 @@ void set_track(sp_track *track) {
 	s_track = track;
 }
 
-void addTask(task_fptr fptr, string name, list<int> int_params, list<string> string_params) {
+void addTask(task_fptr fptr, string name, list<int> int_params,
+		list<string> string_params) {
 	log("Add task <%s> to the queue", name.c_str());
 	pthread_mutex_lock(&s_notify_mutex);
 	Task task(fptr, name, int_params, string_params);
@@ -87,29 +91,37 @@ void addTask(task_fptr fptr, string name, list<string> string_params) {
 	addTask(fptr, name, int_params, string_params);
 }
 
+/*void addTaskFull(task_fptr fptr, string name, list<string> string_params, list<int> int_params) {
+
+ addTask(fptr, name, int_params, string_params);
+ }*/
+
 void addTask(task_fptr fptr, string name, list<int> int_params) {
-	list<string> string_params;
+	list < string > string_params;
 	addTask(fptr, name, int_params, string_params);
 }
 
 void addTask(task_fptr fptr, string name) {
 	list<int> int_params;
-	list<string> string_params;
+	list < string > string_params;
 	addTask(fptr, name, int_params, string_params);
 }
 
 static void connection_error(sp_session *session, sp_error error) {
-	log("------------- Connection error: %s\n -------------", sp_error_message(error));
+	log("------------- Connection error: %s\n -------------",
+			sp_error_message(error));
 }
-static void logged_out(sp_session *session) { log("Logged out"); }
+static void logged_out(sp_session *session) {
+	log("Logged out");
+
+	addTask(on_logged_out, "logout_callback");
+}
 static void log_message(sp_session *session, const char *data) {
 	log("************* Message: %s *************", data);
 }
 static void play_token_lost(sp_session *session) {
 	addTask(pause, "token_lost:pause");
 }
-
-
 
 // Tell java about the end of track
 static void end_of_track(sp_session *sess) {
@@ -123,7 +135,8 @@ static void logged_in(sp_session *session, sp_error error) {
 	addTask(on_logged_in, "login_callback", int_params);
 }
 
-static void process_events(list<int> int_params, list<string> string_params, sp_session *session, sp_track *track) {
+static void process_events(list<int> int_params, list<string> string_params,
+		sp_session *session, sp_track *track) {
 	do {
 		sp_session_process_events(session, &s_next_timeout);
 	} while (s_next_timeout == 0);
@@ -136,25 +149,16 @@ static void notify_main_thread(sp_session *session) {
 
 // Try to start the track again if it was loaded
 static void metadata_updated(sp_session *session) {
-	addTask(load_and_play_track_after_metadata_updated, "load_and_play_track_after_metadata_updated");
+	addTask(load_and_play_track_after_metadata_updated,
+			"load_and_play_track_after_metadata_updated");
 }
 
-static sp_session_callbacks callbacks = {
-	&logged_in,
-	&logged_out,
-	&metadata_updated,
-	&connection_error,
-	NULL,
-	&notify_main_thread,
-	&music_delivery,
-	&play_token_lost,
-	&log_message,
-	&end_of_track
-};
+static sp_session_callbacks callbacks = { &logged_in, &logged_out,
+		&metadata_updated, &connection_error, NULL, &notify_main_thread,
+		&music_delivery, &play_token_lost, &log_message, &end_of_track };
 
 // The main loop takes care of executing tasks on the libspotify thread.
 static void libspotify_loop(sp_session *session) {
-
 	while (true) {
 		pthread_mutex_lock(&s_notify_mutex);
 
@@ -167,7 +171,8 @@ static void libspotify_loop(sp_session *session) {
 			ts.tv_nsec += (s_next_timeout % 1000) * 1000000;
 
 			log("Wait for new task or until %d ms", s_next_timeout);
-			int reason = pthread_cond_timedwait(&s_notify_cond, &s_notify_mutex, &ts);
+			int reason = pthread_cond_timedwait(&s_notify_cond, &s_notify_mutex,
+					&ts);
 			// If timeout then process_events should be added to the queue
 			if (reason == ETIMEDOUT) {
 				pthread_mutex_unlock(&s_notify_mutex);
@@ -187,7 +192,8 @@ static void libspotify_loop(sp_session *session) {
 		s_tasks.clear();
 		pthread_mutex_unlock(&s_notify_mutex);
 
-		for (list<Task>::iterator it = tasks_copy.begin(); it != tasks_copy.end(); it++) {
+		for (list<Task>::iterator it = tasks_copy.begin();
+				it != tasks_copy.end(); it++) {
 			Task task = (*it);
 			log("Running task: %s", task.name.c_str());
 			task.fptr(task.int_params, task.string_params, session, s_track);
@@ -196,7 +202,7 @@ static void libspotify_loop(sp_session *session) {
 }
 
 void* start_spotify(void *storage_path) {
-	string path = (char *)storage_path;
+	string path = (char *) storage_path;
 
 	pthread_mutex_init(&s_notify_mutex, NULL);
 	pthread_cond_init(&s_notify_cond, NULL);

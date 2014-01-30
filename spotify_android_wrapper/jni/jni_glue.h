@@ -35,6 +35,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved);
 JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_init(JNIEnv *je, jclass jc, jobject loader, jstring storage_path);
 JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_destroy(JNIEnv *je, jclass jc);
 JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_login(JNIEnv *je, jclass jc, jstring username, jstring password);
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_logout(JNIEnv *je, jclass jc, jstring username, jstring password);
 JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_toggleplay(JNIEnv *je, jclass jc, jstring uri);
 JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_playnext(JNIEnv *je, jclass jc, jstring j_uri);
 JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_seek(JNIEnv *je, jclass jc, jfloat position);
@@ -42,5 +43,8 @@ JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_star(JN
 JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_unstar(JNIEnv *je, jclass jc);
 
 //
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchallplaylistnames(JNIEnv *je, jclass jc);
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchallplaylistsandtracks(JNIEnv *je, jclass jc);
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchalbuminfo(JNIEnv *je, jclass jc, jstring t_uri);
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_search(JNIEnv *je, jclass jc, jstring query, jint trackCount, jint artistCount, jint albumCount, jint playlistCount);
+
 }

@@ -3,6 +3,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".TracklistActivity" >
+    
+     <ImageView
+        android:id="@+id/coverImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/cover_mock" 
+        android:layout_marginLeft="200dp"/>
 
     <ListView
        android:id="@android:id/list"
@@ -10,5 +17,7 @@
         android:layout_height="wrap_content" 
         >
     </ListView>
+
+   
 
 </merge>

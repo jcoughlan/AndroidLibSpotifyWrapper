@@ -52,7 +52,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
 	return JNI_VERSION_1_6;
 }
 
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_init(JNIEnv * je, jclass jc, jobject class_loader, jstring j_storage_path) {
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_init(
+		JNIEnv * je, jclass jc, jobject class_loader, jstring j_storage_path) {
 	static pthread_t tid;
 	static const char *storage_path;
 
@@ -69,12 +70,13 @@ JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_init(JN
 	init_audio_player();
 }
 
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_login(JNIEnv *je, jclass jc, jstring j_username, jstring j_password) {
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_login(
+		JNIEnv *je, jclass jc, jstring j_username, jstring j_password) {
 
 	const char *username = je->GetStringUTFChars(j_username, 0);
 	const char *password = je->GetStringUTFChars(j_password, 0);
 
-	list<string> string_params;
+	list < string > string_params;
 	string_params.push_back(username);
 	string_params.push_back(password);
 	addTask(login, "login", string_params);
@@ -83,10 +85,11 @@ JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_login(J
 	je->ReleaseStringUTFChars(j_password, password);
 }
 
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_toggleplay(JNIEnv *je, jclass jc, jstring j_uri) {
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_toggleplay(
+		JNIEnv *je, jclass jc, jstring j_uri) {
 	const char *uri = je->GetStringUTFChars(j_uri, 0);
 
-	list<string> string_params;
+	list < string > string_params;
 	string_params.push_back(uri);
 	log("playing uri %s", string_params.front().c_str());
 	addTask(toggle_play, "play_song", string_params);
@@ -94,49 +97,86 @@ JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_togglep
 	je->ReleaseStringUTFChars(j_uri, uri);
 }
 
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_playnext(JNIEnv *je, jclass jc, jstring j_uri) {
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_playnext(
+		JNIEnv *je, jclass jc, jstring j_uri) {
 	const char *uri = je->GetStringUTFChars(j_uri, 0);
 
-	list<string> string_params;
+	list < string > string_params;
 	string_params.push_back(uri);
 	addTask(play_next, "play_next", string_params);
 
 	je->ReleaseStringUTFChars(j_uri, uri);
 }
 
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_star(JNIEnv *je, jclass jc) {
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_star(
+		JNIEnv *je, jclass jc) {
 	addTask(star, "star");
 }
 
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_unstar(JNIEnv *je, jclass jc) {
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_unstar(
+		JNIEnv *je, jclass jc) {
 	addTask(unstar, "unstar");
 }
 
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_seek(JNIEnv *je, jclass jc, jfloat position) {
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_seek(
+		JNIEnv *je, jclass jc, jfloat position) {
 	list<int> int_params;
 	int_params.push_back((int) (position * 100.0));
 
 	addTask(seek, "seek", int_params);
 }
 
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_destroy(JNIEnv *je, jclass jc) {
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_destroy(
+		JNIEnv *je, jclass jc) {
 	log("Cleanup native code");
 	addTask(destroy, "destroy");
 }
 
-JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchallplaylistnames(JNIEnv *je, jclass jc)
-{
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchallplaylistsandtracks(
+		JNIEnv *je, jclass jc) {
 	log("fetchallplaylists");
 	addTask(fetchallplaylistcontainers, "fetchallplaylists");
 }
 
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_logout(
+		JNIEnv *je, jclass jc, jstring username, jstring password) {
+	log("logout");
+	addTask(logout, "logout");
+}
 
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_fetchalbuminfo(
+		JNIEnv *je, jclass jc, jstring t_uri) {
+	const char *uri = je->GetStringUTFChars(t_uri, 0);
+
+	list < string > string_params;
+	string_params.push_back(uri);
+	log("fetch_album_info %s", string_params.front().c_str());
+	addTask(fetchalbuminfo, "fetchalbuminfo", string_params);
+
+	je->ReleaseStringUTFChars(t_uri, uri);
+}
+JNIEXPORT void JNICALL Java_com_example_spotifywrapper_LibSpotifyWrapper_search(
+		JNIEnv *je, jclass jc, jstring query, jint trackCount, jint artistCount,
+		jint albumCount, jint playlistCount) {
+	const char *queryChar = je->GetStringUTFChars(query, 0);
+
+	list < string > string_params;
+	string_params.push_back(queryChar);
+	list<int> int_params;
+	int_params.push_back(trackCount);
+	int_params.push_back(artistCount);
+	int_params.push_back(albumCount);
+	int_params.push_back(playlistCount);
+	log("fetch_queryinfo %s", string_params.front().c_str());
+	addTask(search, "search", int_params, string_params);
+}
 // Helper for calling the specified static void/void java-method
 void call_static_void_method(const char *method_name) {
 	JNIEnv *env;
 	jclass classLibSpotify = find_class_from_native_thread(&env);
 
-	jmethodID methodId = env->GetStaticMethodID(classLibSpotify, method_name, "()V");
+	jmethodID methodId = env->GetStaticMethodID(classLibSpotify, method_name,
+			"()V");
 	env->CallStaticVoidMethod(classLibSpotify, methodId);
 	env->DeleteLocalRef(classLibSpotify);
 }
@@ -158,10 +198,13 @@ jclass find_class_from_native_thread(JNIEnv **envSetter) {
 		exitl("Could not find classloader");
 
 	jclass cls = env->FindClass("java/lang/ClassLoader");
-	jmethodID methodLoadClass = env->GetMethodID(cls, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+	jmethodID methodLoadClass = env->GetMethodID(cls, "loadClass",
+			"(Ljava/lang/String;)Ljava/lang/Class;");
 
-	jstring className = env->NewStringUTF("com/example/spotifywrapper/LibSpotifyWrapper");
-	jclass result = (jclass) env->CallObjectMethod(s_java_class_loader, methodLoadClass, className);
+	jstring className = env->NewStringUTF(
+			"com/example/spotifywrapper/LibSpotifyWrapper");
+	jclass result = (jclass) env->CallObjectMethod(s_java_class_loader,
+			methodLoadClass, className);
 	if (!result) {
 		exitl("Cant find the LibSpotify class");
 	}

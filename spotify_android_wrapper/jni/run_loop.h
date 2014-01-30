@@ -38,7 +38,7 @@ typedef void (*task_fptr)(list<int> int_params, list<string> string_params, sp_s
 
 void set_track(sp_track *track);
 
-void addTask(task_fptr fptr, string name, list<float> int_params, list<string> string_params);
+void addTask(task_fptr fptr, string name, list<int> int_params, list<string> string_params);
 void addTask(task_fptr fptr, string name, list<string> string_params);
 void addTask(task_fptr fptr, string name, list<int> int_params);
 void addTask(task_fptr fptr, string name);

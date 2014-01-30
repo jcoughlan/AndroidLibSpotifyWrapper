@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <ExpandableListView
+        android:id="@+id/trackSearchResult"
+        android:layout_width="match_parent"
+        android:layout_height="250dp" 
+        >
+    </ExpandableListView>
+    <ExpandableListView
+        android:id="@+id/albumSearchResult"
+        android:layout_width="match_parent"
+        android:layout_height="250dp" 
+        android:paddingTop="10dp"
+        >
+    </ExpandableListView>
+    <ExpandableListView
+        android:id="@+id/playlistSearchResult"
+        android:paddingTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="250dp" 
+        >
+    </ExpandableListView>
+
+</LinearLayout>

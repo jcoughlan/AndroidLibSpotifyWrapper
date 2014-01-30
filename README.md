@@ -12,6 +12,11 @@ FLOW
 *Login->ShowPlaylists->SelectPlaylist->ViewSongDetails->PlaySong
 
 The app isnt aimed at providing a particularly good user experience but rather a type of Spotify HelloWorld to showcase the integration with libSpotify, and make it easy for others to copy,  as I don't believe there is a fully fledged libSpotify wrapper available for Android yet.
+
+KNOWN ISSUES:
+
+*Regular Spotify Library crashes-> Not sure why this is happening but its not a huge concern as of yet.
+*'Service leaked' Android Error-> Looking into this .
 														
 DONE SO FAR:
 
@@ -19,14 +24,20 @@ DONE SO FAR:
 *Track Starring (psyonspotify)
 *Login (psyonspotify)
 *Basic playlist population
+*Tracklist Population
+*Play from playlist/tracklist
+*Album cover download (using the spotify track link)
+*Playlist cover download (if there is one, otherwise use cover for first track on playlist)
+*re-initialisation of player
 
 DOING NOW:
 
-*Tracklist population
+memory optimisation, memory release
 
 TO BE DONE:
 
-*everything else! searching, browsing, etc.
+* Layout (I havent put any effort into this as of yet)
+* Everything else! searching, album browsing, all other calls to library etc.
 
 SETUP
 
@@ -36,4 +47,4 @@ CONTACT
 
 Please email me at coughlan.james@outlook.com if you have any questions.
 
-Readme last updated: 17/01/2014
+Readme last updated: 21/01/2014

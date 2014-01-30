@@ -193,14 +193,10 @@ public class LoginActivity extends Activity {
 					Installation.writeInstallationFile(LoginActivity.this,
 							mEmail);
 					showProgress(false);
-					/*
-					 * Intent playerIntent = new Intent(LoginActivity.this,
-					 * PlayerActivity.class); startActivity(playerIntent);
-					 */
+					
 					Intent playlistIntent = new Intent(LoginActivity.this,
 							PlaylistActivity.class);
 					startActivity(playlistIntent);
-
 				}
 
 				@Override
@@ -214,7 +210,6 @@ public class LoginActivity extends Activity {
 							new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog,
 										int id) {
-
 								}
 							});
 
