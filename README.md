@@ -1,6 +1,16 @@
 AndroidLibSpotifyWrapper
 ========================
 
+
+******************************************************************************************
+		******NOTE******
+		
+I havent updated this project in a while as i've been working on a seperate private project utilising this library.
+In this project I have implemented a huge amount of new features so it's nearly complete. I will be updating this repo sometime near the end of March 2014 with the updated code. In the meantime if you need any help with any calls to the library email me at the address below.
+
+
+*******************************************************************************************
+
 A libSpotify wrapper for Android
 
 Feel free to contribute to the project!
@@ -47,4 +57,4 @@ CONTACT
 
 Please email me at coughlan.james@outlook.com if you have any questions.
 
-Readme last updated: 21/01/2014
+Readme last updated: 04/03/2014
